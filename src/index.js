@@ -5,19 +5,15 @@ const { GameStages, ValueType } = require("./global");
 const { Timer } = require("easytimer.js");
 const cors = require('cors');
 
+//db
+const db = require('./config/db');
+
+const User = require('./models/user');
+
 /** Server Handling */
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// const privateKey = fs.readFileSync("/etc/letsencrypt/live/hbarroulette.io/privkey.pem");
-// const certificate = fs.readFileSync("/etc/letsencrypt/live/hbarroulette.io/fullchain.pem");
-
-// const credentials = {
-//     key: privateKey,
-//     cert: certificate,
-// }
-// const httpServer = createServer(credentials, app);
 
 const httpServer = http.createServer(app);
 
@@ -26,6 +22,21 @@ const io = new Server(httpServer, {
     origin: "*"
   }
 });
+
+// DB connect
+db.mongoose
+  .connect(db.url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log("Connected to the database!");
+  })
+  .catch(err => {
+    console.log("Cannot connect to the database!", err);
+    process.exit();
+  });
+
 
 let timer = new Timer();
 let users = new Map()
@@ -120,30 +131,29 @@ timer.addEventListener('secondsUpdated', function (e) {
 
 io.on("connection", (socket) => {
 
-  socket.on('enter', (data) => {
+  socket.on('enter', async(data) => {
     let existed = false;
     console.log('WALLET ID:', data);
     users.set(socket.id, data);
-    let db_row = getRow(data);
-    let i = 0;
-    if(db_row == undefined){
+
+    const _userInfo = await User.findOne({ wallet_address: data });
+    if(_userInfo === null){
       return;
     }
     if(balances.length > 0){
       for( i = 0; i < balances.length; i++ ){
-        if(balances[i].username == data){
+        if(balances[i].wallet_address == data){
           existed = true;
         }
       }
     }
     if( !existed ){
       balances.push({
-        username: db_row['walletId'],
-        value: parseFloat(db_row['balance'])
+        wallet_address: _userInfo.wallet_address,
+        balance: parseFloat(_userInfo.balance)
       })
     }
 
-    console.log(balances);
     gameData.balances = balances;
     sendStageEvent(gameData);
   });
@@ -153,26 +163,26 @@ io.on("connection", (socket) => {
     let chipData = JSON.parse(data)
     usersData.set(socket.id, chipData)
   });
-  socket.on('deposit', (name, data) => {
+  socket.on('deposit', (wallet_address, data) => {
     let i = 0;
     for( i = 0; i < balances.length; i++ ){
-      if(balances[i].username == name){
-        balances[i].value += data;
+      if(balances[i].wallet_address == wallet_address){
+        balances[i].balance += data;
       }
     }
-    deposit(name, data);
+    // deposit(name, data);
     gameData.balances = balances;
   });
-  socket.on('refund', (name) => {
+  socket.on('refund', (wallet_address) => {
     let i = 0;
-    console.log('refund: ' + name);
+    console.log('refund: ' + wallet_address);
     for( i = 0; i < balances.length; i++ ){
-      if(balances[i].username == name){
-        balances[i].value = 0;
+      if(balances[i].wallet_address == wallet_address){
+        balances[i].balance = 0;
       }
     }
 
-    refund(name);
+    // refund(name);
     gameData.balances = balances;
   });
   socket.on("disconnect", (reason) => {
@@ -206,10 +216,10 @@ function sendStageEvent(_gameData) {
   io.emit('stage-change', json);
 }
 
-let blackNumbers = [ 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 29, 28, 31, 33, 35 ];
-let redNumbers = [ 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36 ];
+let blackNumbers = [ 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36 ];
+let redNumbers = [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35 ];
 
-function calculateWinnings(winningNumber, placedChips) { 
+function calculateWinnings(winningNumber, placedChips) {
   let win = 0;
   let arrayLength = placedChips.length;
   for (let i = 0; i < arrayLength; i++) {
