@@ -1,10 +1,9 @@
-//import { createServer } from "https";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { GameStages, ValueType } from "./global";
-import { Timer } from "easytimer.js";
-import express from 'express';
-import cors from 'cors';
+const http = require("http");
+const express = require('express');
+const { Server } = require("socket.io");
+const { GameStages, ValueType } = require("./global");
+const { Timer } = require("easytimer.js");
+const cors = require('cors');
 
 /** Server Handling */
 const app = express();
@@ -20,7 +19,7 @@ app.use(express.json());
 // }
 // const httpServer = createServer(credentials, app);
 
-const httpServer = createServer(app);
+const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {

@@ -1,4 +1,4 @@
-export const ValueType = {
+const ValueType = {
   NUMBER: 0,
   NUMBERS_1_12: 1,
   NUMBERS_2_12: 2,
@@ -19,9 +19,12 @@ export const ValueType = {
   NUMBERS_3R_12: 17,
 };
 
-export const GameStages = {
+const GameStages = {
   PLACE_BET: 0,
   NO_MORE_BETS: 1,
   WINNERS: 2,
   NONE: 3
 };
+
+exports.ValueType = ValueType;
+exports.GameStages = GameStages;
