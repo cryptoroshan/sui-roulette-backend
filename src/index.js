@@ -8,12 +8,14 @@ const cors = require('cors');
 //db
 const db = require('./config/db');
 
+const api = require("./api");
 const User = require('./models/user');
 
 /** Server Handling */
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api", api);
 
 const httpServer = http.createServer(app);
 
