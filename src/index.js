@@ -8,8 +8,9 @@ const cors = require('cors');
 //db
 const db = require('./config/db');
 
-const api = require("./api");
 const User = require('./models/user');
+
+const api = require("./api");
 
 /** Server Handling */
 const app = express();
@@ -137,6 +138,10 @@ io.on("connection", (socket) => {
     let existed = false;
     console.log('WALLET ID:', data);
     users.set(socket.id, data);
+    await User.findOneAndUpdate(
+      { wallet_address: data },
+      { socket_id: socket.id }
+    );
 
     const _userInfo = await User.findOne({ wallet_address: data });
     if(_userInfo === null){
@@ -158,6 +163,14 @@ io.on("connection", (socket) => {
 
     gameData.balances = balances;
     sendStageEvent(gameData);
+  });
+
+  socket.on('send_message', async (data) => {
+    const _username = data.username;
+    const _message = data.message;
+    console.log(_username, _message);
+
+    io.emit('receive_message', { username: _username, message: _message });
   });
 
   socket.on('place-bet', (data) => {
@@ -189,7 +202,7 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", (reason) => {
     users.delete(socket.id);
-    usersData.delete(socket.id);
+    // usersData.delete(socket.id);
   });
 });
 
