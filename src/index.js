@@ -206,9 +206,9 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(3333, () =>{
+httpServer.listen(3306, () =>{
 
-  console.log(`Server is running on port 3333`);
+  console.log(`Server is running on port 3306`);
   
   timer.start({precision: 'seconds'});
 });
