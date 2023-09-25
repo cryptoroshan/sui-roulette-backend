@@ -50,17 +50,18 @@ let incomes = [];
 let balances = [];
 timer.addEventListener('secondsUpdated', function (e) {
   let currentSeconds = timer.getTimeValues().seconds;
-  gameData.time_remaining = currentSeconds
+  console.log(currentSeconds);
+  gameData.time_remaining = 60 - currentSeconds
   
-  if (currentSeconds == 1) {
+  if (currentSeconds == 0) {
     console.log("Place bet");
     usersData = new Map()
     gameData.stage = GameStages.PLACE_BET
     wins = []
     sendStageEvent(gameData)
-  } else if (currentSeconds == 25) {
+  } else if (currentSeconds == 20) {
     gameData.stage = GameStages.NO_MORE_BETS
-    gameData.value = getRandomNumberInt(0, 36);
+    gameData.value = getRandomNumberInt(0, 37);
     console.log("No More Bets")
     sendStageEvent(gameData)
 
@@ -113,7 +114,7 @@ timer.addEventListener('secondsUpdated', function (e) {
       }
     }
 
-  } else if (currentSeconds == 35) {
+  } else if (currentSeconds == 10) {
     console.log("Winners")
     gameData.stage = GameStages.WINNERS
     // sort winners desc
@@ -231,8 +232,8 @@ function sendStageEvent(_gameData) {
   io.emit('stage-change', json);
 }
 
-let blackNumbers = [ 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36 ];
-let redNumbers = [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35 ];
+let blackNumbers = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
+let redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 21, 23, 25, 27, 30, 32, 34, 36];
 
 function calculateWinnings(winningNumber, placedChips) {
   let win = 0;
@@ -247,7 +248,7 @@ function calculateWinnings(winningNumber, placedChips) {
       
       if (placedChipType === ValueType.NUMBER &&  placedChipValue === winningNumber)
       {
-          win += placedChipSum * 36;
+          win += placedChipSum * 37;
       }
       else if (placedChipType === ValueType.DOUBLE_SPLIT &&  placedValueSplit !== undefined && placedValueSplit.indexOf(winningNumber) > -1)
       {
